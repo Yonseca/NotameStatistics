@@ -24,23 +24,29 @@ public class FetchNotas {
     public static final String FILE_NAME = "patata.csv";
 
     public static void main(String[] args) {
-        String maxPages = "1";
 
         try {
-            URI uri = new URI(URL + maxPages);
-            HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+            for (int maxPages = 1; maxPages <= 5; maxPages++) {
+                System.out.println("Página: " + maxPages);
+                long tic = System.currentTimeMillis();
+                URI uri = new URI(URL + maxPages);
+                HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
 
-            HttpRequest request = HttpRequest.newBuilder(uri)
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-                    .header("Accept-Encoding", "gzip,deflate,br")
-                    .build();
+                HttpRequest request = HttpRequest.newBuilder(uri)
+                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+                        .header("Accept-Encoding", "gzip,deflate,br")
+                        .build();
 
-            HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-            getNotas(response);
+                HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                getNotas(response);
+                long tac = System.currentTimeMillis();
+                if (tac - tic <= 1000){
+                    Thread.sleep(tac - tic);
+                }
+            }
             Writer writer = new FileWriter(FILE_NAME);
             StatefulBeanToCsv<Nota> notaToCsv = new StatefulBeanToCsvBuilder<Nota>(writer).build();
             notaToCsv.write(notas.stream());
-            System.out.println(response.body());
 
         } catch (URISyntaxException | IOException | InterruptedException | CsvRequiredFieldEmptyException |
                  CsvDataTypeMismatchException e) {

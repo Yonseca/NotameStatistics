@@ -20,7 +20,6 @@ public class Nota implements Comparable<Nota>{
         this.user = user;
         this.referencedUsers = referencedUsers;
         this.text = text;
-        this.elementToString = elementToString;
     }
 
     private Instant timestamp;
@@ -105,7 +104,7 @@ public class Nota implements Comparable<Nota>{
         if (body.size() > 0) {
             Element text = body.get(0);
             this.text = text.wholeText();
-            elementToString = text.toString();
+            //elementToString = text.toString();
             postId = Integer.parseInt(text.id().substring(4));
         }
     }
