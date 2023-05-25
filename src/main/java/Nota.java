@@ -3,6 +3,8 @@ import java.util.ArrayList;
 
 public class Nota {
 
+    public Nota(){}
+
     public Nota(Instant timestamp, long postId, String user, ArrayList<String> referencedUsers, String text) {
         this.timestamp = timestamp;
         this.postId = postId;
