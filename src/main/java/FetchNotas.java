@@ -26,7 +26,7 @@ public class FetchNotas {
     public static void main(String[] args) {
 
         try {
-            for (int maxPages = 1; maxPages <= 5; maxPages++) {
+            for (int maxPages = 1; maxPages <= 200; maxPages++) {
                 System.out.println("Página: " + maxPages);
                 long tic = System.currentTimeMillis();
                 URI uri = new URI(URL + maxPages);
@@ -40,18 +40,30 @@ public class FetchNotas {
                 HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
                 getNotas(response);
                 long tac = System.currentTimeMillis();
-                if (tac - tic <= 1000){
-                    Thread.sleep(tac - tic);
+                long runTime = tac-tic;
+                if (runTime <= 1000){
+                    System.out.println("Esperando " + runTime + " ms.");
+                    Thread.sleep(1000 - runTime);
                 }
             }
-            Writer writer = new FileWriter(FILE_NAME);
-            StatefulBeanToCsv<Nota> notaToCsv = new StatefulBeanToCsvBuilder<Nota>(writer).build();
-            notaToCsv.write(notas.stream());
+
+            writeToCSV();
 
         } catch (URISyntaxException | IOException | InterruptedException | CsvRequiredFieldEmptyException |
                  CsvDataTypeMismatchException e) {
             System.out.println("Boom: " + e.getMessage());
         }
+    }
+
+    private static void writeToCSV() throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
+        Writer writer = new FileWriter(FILE_NAME);
+        StatefulBeanToCsv<Nota> notaToCsv = new StatefulBeanToCsvBuilder<Nota>(writer)
+                .withSeparator(';')
+                .withApplyQuotesToAll(true).
+                build();
+        notaToCsv.write(notas.stream());
+        writer.flush();
+        writer.close();
     }
 
     private static void getNotas(HttpResponse<InputStream> response) {
@@ -63,9 +75,7 @@ public class FetchNotas {
         } catch (IOException io) {
             System.out.println("Boom: " + io.getMessage());
         }
-
-
-        notas.forEach((v) -> System.out.println(v.getUser() + ":" + v.getTimestamp() +  ":" + v.getText() + "\n"));
+//        notas.forEach((v) -> System.out.println(v.getUser() + ":" + v.getTimestamp() +  ":" + v.getText() + "\n"));
 
     }
 
