@@ -1,14 +1,11 @@
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.bean.*;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -24,9 +21,9 @@ public class FetchNotas {
     public static final String FILE_NAME = "patata.csv";
 
     public static void main(String[] args) {
-
+        loadFromCSV(FetchNotas.FILE_NAME);
         try {
-            for (int maxPages = 1; maxPages <= 500; maxPages++) {
+            for (int maxPages = 1; maxPages <= 550; maxPages++) {
                 System.out.println("Página: " + maxPages);
                 long tic = System.currentTimeMillis();
                 URI uri = new URI(URL + maxPages);
@@ -53,6 +50,24 @@ public class FetchNotas {
                  CsvDataTypeMismatchException e) {
             System.out.println("Boom: " + e.getMessage());
         }
+    }
+
+    private static void loadFromCSV(String fileName) {
+        try(CSVReader csvReader = new CSVReader(new FileReader (FetchNotas.FILE_NAME))){
+
+            HeaderColumnNameMappingStrategy<Nota> mapping = new HeaderColumnNameMappingStrategyBuilder<Nota>().build();
+            CsvToBean<Nota> csvToNota = new CsvToBeanBuilder<Nota>(csvReader)
+                    .withMappingStrategy(mapping).withStrictQuotes(true).withSeparator(';').build();
+            csvToNota.forEach(notas::add);
+            System.out.println("patata");
+
+        } catch (FileNotFoundException f){
+            System.out.println("Boom: " + f);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     private static void writeToCSV() throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
