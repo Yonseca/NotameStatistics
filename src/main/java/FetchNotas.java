@@ -26,7 +26,7 @@ public class FetchNotas {
     public static void main(String[] args) {
 
         try {
-            for (int maxPages = 1; maxPages <= 200; maxPages++) {
+            for (int maxPages = 1; maxPages <= 500; maxPages++) {
                 System.out.println("Página: " + maxPages);
                 long tic = System.currentTimeMillis();
                 URI uri = new URI(URL + maxPages);
@@ -41,10 +41,10 @@ public class FetchNotas {
                 getNotas(response);
                 long tac = System.currentTimeMillis();
                 long runTime = tac-tic;
-                if (runTime <= 1000){
-                    System.out.println("Esperando " + runTime + " ms.");
-                    Thread.sleep(1000 - runTime);
-                }
+                System.out.println("Tiempo de ejecución: " + runTime);
+                System.out.println("Esperando " + Math.round(runTime*1.25) + " ms.");
+                Thread.sleep(Math.round(runTime*1.25));
+
             }
 
             writeToCSV();
