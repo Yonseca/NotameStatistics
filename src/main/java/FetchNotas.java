@@ -1,6 +1,10 @@
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.bean.*;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -12,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashSet;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 public class FetchNotas {
@@ -23,7 +28,7 @@ public class FetchNotas {
     public static void main(String[] args) {
         loadFromCSV(FetchNotas.FILE_NAME);
         try {
-            for (int maxPages = 1; maxPages <= 550; maxPages++) {
+            for (int maxPages = 1; maxPages <= 5; maxPages++) {
                 System.out.println("Página: " + maxPages);
                 long tic = System.currentTimeMillis();
                 URI uri = new URI(URL + maxPages);
@@ -40,6 +45,7 @@ public class FetchNotas {
                 long runTime = tac-tic;
                 System.out.println("Tiempo de ejecución: " + runTime);
                 System.out.println("Esperando " + Math.round(runTime*1.25) + " ms.");
+                System.out.println("Notas recopiladas: " + notas.size());
                 Thread.sleep(Math.round(runTime*1.25));
 
             }
@@ -48,22 +54,26 @@ public class FetchNotas {
 
         } catch (URISyntaxException | IOException | InterruptedException | CsvRequiredFieldEmptyException |
                  CsvDataTypeMismatchException e) {
-            System.out.println("Boom: " + e.getMessage());
+            System.out.println("Boom: " + e);
         }
     }
 
     private static void loadFromCSV(String fileName) {
-        try(CSVReader csvReader = new CSVReader(new FileReader (FetchNotas.FILE_NAME))){
+        try(CSVReader csvReader = new CSVReaderBuilder(
+                new FileReader (FetchNotas.FILE_NAME)).withCSVParser(
+                        new CSVParserBuilder().withSeparator(';').withStrictQuotes(true).build())
+                .build()){
 
-            HeaderColumnNameMappingStrategy<Nota> mapping = new HeaderColumnNameMappingStrategyBuilder<Nota>().build();
-            CsvToBean<Nota> csvToNota = new CsvToBeanBuilder<Nota>(csvReader)
-                    .withMappingStrategy(mapping).withStrictQuotes(true).withSeparator(';').build();
-            csvToNota.forEach(notas::add);
+            csvReader.skip(1);
+            List<String[]> all = csvReader.readAll();
+            all.parallelStream().forEach(line -> notas.add(new Nota(line)));
             System.out.println("patata");
 
         } catch (FileNotFoundException f){
             System.out.println("Boom: " + f);
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (CsvException e) {
             throw new RuntimeException(e);
         }
 
@@ -88,7 +98,7 @@ public class FetchNotas {
             var elements = doc.getElementsByAttributeValueStarting("data-id", "post-");
             elements.forEach(e -> notas.add(new Nota(e)));
         } catch (IOException io) {
-            System.out.println("Boom: " + io.getMessage());
+            System.out.println("Boom: " + io);
         }
 //        notas.forEach((v) -> System.out.println(v.getUser() + ":" + v.getTimestamp() +  ":" + v.getText() + "\n"));
 
