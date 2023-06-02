@@ -1,6 +1,4 @@
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
+import com.opencsv.*;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
@@ -26,7 +24,6 @@ public class FetchNotas {
     public static final int NOTAS_PER_PAGE = 50;
     public static final String FILE_NAME = "patata.csv";
     private static final ConcurrentHashMap<Long, Nota> notas = new ConcurrentHashMap<>();
-    private static int notasPerPage = 0;
 
     public static void main(String[] args) {
         try {
@@ -77,7 +74,7 @@ public class FetchNotas {
     private static void loadFromCSV() throws IOException, CsvException {
         try (CSVReader csvReader = new CSVReaderBuilder(
                 new FileReader(FetchNotas.FILE_NAME)).withCSVParser(
-                        new CSVParserBuilder().withSeparator(';').withStrictQuotes(true).build())
+                        new RFC4180ParserBuilder().withSeparator(';').build())
                 .build()) {
 
             csvReader.skip(1);
@@ -113,7 +110,7 @@ public class FetchNotas {
                 Nota nuevaNota = new Nota(e);
                 notas.putIfAbsent(nuevaNota.getPostId(), nuevaNota);
             });
-            notasPerPage = elements.size();
+
         } catch (IOException io) {
             System.out.println("Boom: " + io);
         }
