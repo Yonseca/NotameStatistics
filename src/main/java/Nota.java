@@ -29,7 +29,7 @@ public class Nota implements Comparable<Nota>{
 
     public Nota(String[] csvLine) {
         try{
-            this.timestamp = Instant.parse(csvLine[3]);
+            this.timestamp = Instant.parse(csvLine[4]);
         } catch (DateTimeParseException f){
             System.out.println("Error parseando fecha: " + csvLine[4]);
         }
