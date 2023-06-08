@@ -12,6 +12,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
 public class FetchNotas {
@@ -41,7 +42,7 @@ public class FetchNotas {
 
     private static int getNotas(int page) throws URISyntaxException, IOException, InterruptedException {
         List<Nota> notasList = new ArrayList<>();
-
+        int[] ids = dao.getMaxMinIdOnDatabase();
 
         while (notasList.size() < 2500){
             System.out.println("Página: " + page);
@@ -52,16 +53,18 @@ public class FetchNotas {
             System.out.println("Tiempo de ejecución: " + runTime);
             System.out.println("Esperando " + Math.round(runTime * 1.25) + " ms.");
             Thread.sleep(Math.round(runTime * 1.25));
+            var listaNotas = parseNotas(response);
+                notasList.addAll(Objects.requireNonNull());
 
-            notasList.addAll(Objects.requireNonNull(parseNotas(response)));
+
+            }
             System.out.println("Notas para insertar: " + notasList.size());
-
-            page++;
+            page = getNextPage(notasList)
         }
         dao.insert(notasList);
 
 
-        int notasInsertadas = dao.insert(notasList);
+        int notasInsertadas = dao.insert(listaNotas, ids);
 
 
         return page; //getNextPage(page, notasInsertadas);
@@ -80,14 +83,17 @@ public class FetchNotas {
         return response;
     }
 
-    private static int getNextPage(int page, int notasRecopiladas) {
-        if (notasRecopiladas == 0 && !recalculated) {
+    private static int getNextPage(List<Nota> listaNotas, int[] ids) {
+        if(!recalculated){
             recalculated = true;
-            page = Math.floorDiv(notas.size(), NOTAS_PER_PAGE);
-            System.out.println("Saltando a la página " + page);
-            return page;
+            boolean alreadyRegistered = listaNotas.stream().allMatch(e ->
+                    e.getPostId() >= ids[0] && e.getPostId() <= ids[1]);
+            if (alreadyRegistered) {
+                return (ids[0] - ids[1]) / NOTAS_PER_PAGE;
+            }
         }
-        return page;
+
+        return 1; // Next
     }
 
     private static List<Nota> parseNotas(HttpResponse<InputStream> response) {

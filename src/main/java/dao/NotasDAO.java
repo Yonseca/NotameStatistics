@@ -6,8 +6,6 @@ import pojo.Nota;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 
 public class NotasDAO {
 
@@ -44,14 +42,19 @@ public class NotasDAO {
         }
     }
 
-    public int getStartPage(int page) {
+    public int[] getMaxMinIdOnDatabase() {
+        int[] ids = new int[2];
         try (Connection connection = DriverManager.getConnection(CON_STRING)) {
-            try(Statement st = connection.createStatement()){
+            try (Statement st = connection.createStatement()) {
                 st.executeQuery("SELECT MAX(post_id), MIN(post_id) FROM Notas");
                 ResultSet rs = st.getResultSet();
-                int maxID = rs.getInt(1);
-                int minId = rs.getInt(2);
+                ids[0] = rs.getInt(1); // Nota más reciente almacenada
+                ids[1] = rs.getInt(2); // Nota más antigua almacenada
             }
-        } catch (SQLException e){
-
+        } catch (SQLException e) {
+            System.out.println("Error al recuperar ids: " + e);
         }
+        return ids;
+    }
+}
+
