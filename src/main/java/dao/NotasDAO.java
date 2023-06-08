@@ -1,11 +1,9 @@
 package dao;
 
+import org.sqlite.SQLiteConfig;
 import pojo.Nota;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,7 +16,7 @@ public class NotasDAO {
             "VALUES (?,?,?,?,?,?); ";
 
     public int insert(List<Nota> notas) {
-        AtomicInteger count = new AtomicInteger();
+        int count = 0;
         try (Connection connection = DriverManager.getConnection(CON_STRING)) {
             PreparedStatement ps = connection.prepareStatement(INSERT_NOTA);
             for (Nota nota : notas) {
@@ -46,5 +44,14 @@ public class NotasDAO {
         }
     }
 
+    public int getStartPage(int page) {
+        try (Connection connection = DriverManager.getConnection(CON_STRING)) {
+            try(Statement st = connection.createStatement()){
+                st.executeQuery("SELECT MAX(post_id), MIN(post_id) FROM Notas");
+                ResultSet rs = st.getResultSet();
+                int maxID = rs.getInt(1);
+                int minId = rs.getInt(2);
+            }
+        } catch (SQLException e){
 
-}
+        }
