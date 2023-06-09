@@ -43,8 +43,8 @@ public class FetchNotas {
     private static int getNotas(int page) throws URISyntaxException, IOException, InterruptedException {
         List<Nota> notasList = new ArrayList<>();
         int[] ids = dao.getMaxMinIdOnDatabase();
-
-        while (notasList.size() < 2500){
+        List<Nota> listaNotas;
+        while (notasList.size() < 2500) {
             System.out.println("Página: " + page);
             long tic = System.currentTimeMillis();
             HttpResponse<InputStream> response = requestNotasFromPage(page);
@@ -53,21 +53,17 @@ public class FetchNotas {
             System.out.println("Tiempo de ejecución: " + runTime);
             System.out.println("Esperando " + Math.round(runTime * 1.25) + " ms.");
             Thread.sleep(Math.round(runTime * 1.25));
-            var listaNotas = parseNotas(response);
-                notasList.addAll(Objects.requireNonNull());
-
-
-            }
+            listaNotas = parseNotas(response);
+            notasList.addAll(Objects.requireNonNull(listaNotas));
             System.out.println("Notas para insertar: " + notasList.size());
-            page = getNextPage(notasList)
+            page = page + getNextPage(listaNotas, ids);
+            int notasInsertadas = dao.insert(listaNotas);
+            System.out.println("Notas insertadas: " + notasInsertadas);
+
+
         }
-        dao.insert(notasList);
 
-
-        int notasInsertadas = dao.insert(listaNotas, ids);
-
-
-        return page; //getNextPage(page, notasInsertadas);
+        return ++page; //getNextPage(page, notasInsertadas);
     }
 
     private static HttpResponse<InputStream> requestNotasFromPage(int page) throws URISyntaxException, IOException, InterruptedException {
@@ -84,7 +80,7 @@ public class FetchNotas {
     }
 
     private static int getNextPage(List<Nota> listaNotas, int[] ids) {
-        if(!recalculated){
+        if (!recalculated) {
             recalculated = true;
             boolean alreadyRegistered = listaNotas.stream().allMatch(e ->
                     e.getPostId() >= ids[0] && e.getPostId() <= ids[1]);
