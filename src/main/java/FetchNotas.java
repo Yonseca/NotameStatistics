@@ -11,27 +11,20 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
 public class FetchNotas {
 
     public static final String URL = "https://old.meneame.net//notame/?page=";
-    public static final int MAX_PAGES = 41710;
+    public static final int MAX_PAGES = 41727;
     public static final int NOTAS_PER_PAGE = 50;
-    //public static final String FILE_NAME = "patata.csv";
-    //private static final ConcurrentHashMap<Long, pojo.Nota> notas = new ConcurrentHashMap<>();
-
     private static boolean recalculated = false;
-
     private static final NotasDAO dao = new NotasDAO();
-
 
     public static void main(String[] args) {
         try {
-            //loadFromCSV();
-            for (int page = 1; page <= MAX_PAGES; page++) {
+            int page = 1;
+            while(page <= MAX_PAGES) {
                 page = getNotas(page);
             }
         } catch (URISyntaxException | IOException | InterruptedException e) {
@@ -42,28 +35,35 @@ public class FetchNotas {
 
     private static int getNotas(int page) throws URISyntaxException, IOException, InterruptedException {
         List<Nota> notasList = new ArrayList<>();
-        int[] ids = dao.getMaxMinIdOnDatabase();
+        long[] ids = dao.getMaxMinIdOnDatabase();
         List<Nota> listaNotas;
         while (notasList.size() < 2500) {
-            System.out.println("Página: " + page);
-            long tic = System.currentTimeMillis();
-            HttpResponse<InputStream> response = requestNotasFromPage(page);
-            long tac = System.currentTimeMillis();
-            long runTime = tac - tic;
-            System.out.println("Tiempo de ejecución: " + runTime);
-            System.out.println("Esperando " + Math.round(runTime * 1.25) + " ms.");
-            Thread.sleep(Math.round(runTime * 1.25));
-            listaNotas = parseNotas(response);
-            notasList.addAll(Objects.requireNonNull(listaNotas));
+            listaNotas = getListaNotas(page);
+            notasList.addAll(listaNotas);
             System.out.println("Notas para insertar: " + notasList.size());
-            page = page + getNextPage(listaNotas, ids);
-            int notasInsertadas = dao.insert(listaNotas);
-            System.out.println("Notas insertadas: " + notasInsertadas);
-
-
+            page++;
+        }
+        int notasInsertadas = dao.insert(notasList);
+        System.out.println("Notas insertadas: " + notasInsertadas);
+        if (notasInsertadas == 0){
+            return page + getNextPage(ids);
+        } else {
+            return page;
         }
 
-        return ++page; //getNextPage(page, notasInsertadas);
+
+    }
+
+    private static List<Nota> getListaNotas(int page) throws URISyntaxException, IOException, InterruptedException {
+        System.out.printf("Página %d de %d (%.2f %%)\n", page, MAX_PAGES, (double)page*100/MAX_PAGES);
+        long tic = System.currentTimeMillis();
+        HttpResponse<InputStream> response = requestNotasFromPage(page);
+        List<Nota> listaNotas = parseNotas(response);
+        long tac = System.currentTimeMillis();
+        long delay = Math.round((tac - tic) * 1.25);
+        System.out.printf("Esperando %s ms. ", delay);
+        Thread.sleep(delay);
+        return listaNotas;
     }
 
     private static HttpResponse<InputStream> requestNotasFromPage(int page) throws URISyntaxException, IOException, InterruptedException {
@@ -75,21 +75,18 @@ public class FetchNotas {
                 .header("Accept-Encoding", "gzip,deflate,br")
                 .build();
 
-        HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-        return response;
+        return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
     }
 
-    private static int getNextPage(List<Nota> listaNotas, int[] ids) {
+    private static int getNextPage(long[] ids) {
         if (!recalculated) {
+            long jump = (ids[0] - ids[1]) / NOTAS_PER_PAGE;
             recalculated = true;
-            boolean alreadyRegistered = listaNotas.stream().allMatch(e ->
-                    e.getPostId() >= ids[0] && e.getPostId() <= ids[1]);
-            if (alreadyRegistered) {
-                return (ids[0] - ids[1]) / NOTAS_PER_PAGE;
-            }
+            System.out.printf("Saltando %d páginas\n", jump);
+            return (int) jump;
+        } else {
+            return 1; // Next
         }
-
-        return 1; // Next
     }
 
     private static List<Nota> parseNotas(HttpResponse<InputStream> response) {
@@ -104,6 +101,4 @@ public class FetchNotas {
             return null;
         }
     }
-
-
 }
