@@ -15,27 +15,16 @@ public class NotasDAO {
             "\tVALUES (?,?,?,?);";
 
     public int insertNotas(List<Nota> notas) {
-        try (Connection connection = DriverManager.getConnection(CON_STRING)) {
-            PreparedStatement ps = connection.prepareStatement(INSERT_NOTA);
+        try (Connection connection = DriverManager.getConnection(CON_STRING);
+             PreparedStatement ps = connection.prepareStatement(INSERT_NOTA)) {
             for (Nota nota : notas) {
-                try {
-                    ps.setLong(1, nota.getPostId());
-                    ps.setString(2, nota.getUser());
-                    ps.setLong(3, nota.getTimestamp());
-                    ps.setString(4, String.join(" ", nota.getReferencedUsers()));
-                    ps.setString(5, nota.getHtml());
-                    ps.setString(6, nota.getText());
-                    ps.addBatch();
-                } catch (SQLException ex) {
-                    System.out.println("Error al insertar notas: " + ex);
-                }
+                addInsertToPreparedStatement(ps, nota);
             }
             System.out.println("Insertando notas");
             var resultCount = ps.executeBatch();
             Long insertedCount = Arrays.stream(resultCount).filter(result -> result == 1).count();
             Long ignoredCount = Arrays.stream(resultCount).filter(result -> result == 0).count();
-            System.out.printf("%d notas insertadas y %d notas ignoradas por existir en base de datos\n", insertedCount, ignoredCount);
-            ps.close();
+            System.out.printf("%d notas insertadas y %d notas ignoradas por existir en base de datos %n", insertedCount, ignoredCount);
             return insertedCount.intValue();
         } catch (SQLException e) {
             System.out.println("Error en insert: " + e);
@@ -43,24 +32,42 @@ public class NotasDAO {
         }
     }
 
+    private static void addInsertToPreparedStatement(PreparedStatement ps, Nota nota) {
+        try {
+            ps.setLong(1, nota.getPostId());
+            ps.setString(2, nota.getUser());
+            ps.setLong(3, nota.getTimestamp());
+            ps.setString(4, String.join(" ", nota.getReferencedUsers()));
+            ps.setString(5, nota.getHtml());
+            ps.setString(6, nota.getText());
+            ps.addBatch();
+        } catch (SQLException ex) {
+            System.out.println("Error al insertar notas: " + ex);
+        }
+    }
+
     public long insertPagina(int page, long[] idsCurrentPage) {
         try (Connection connection = DriverManager.getConnection(CON_STRING);
              PreparedStatement ps = connection.prepareStatement(INSERT_PAGE)) {
-            try {
-                ps.setLong(1, page);
-                ps.setLong(2, System.currentTimeMillis());
-                ps.setLong(3, idsCurrentPage[0]);
-                ps.setLong(4, idsCurrentPage[1]);
-                System.out.printf("Insertada página %d; maxId = %d, minId = %d.\n",
-                        page, idsCurrentPage[0], idsCurrentPage[1]);
-
-            } catch (SQLException ex) {
-                System.out.println("Error al insertar página: " + ex);
-            }
+            setInsertPageParemeters(page, idsCurrentPage, ps);
             return ps.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Error en insert: " + e);
             return -1;
+        }
+    }
+
+    private static void setInsertPageParemeters(int page, long[] idsCurrentPage, PreparedStatement ps) {
+        try {
+            ps.setLong(1, page);
+            ps.setLong(2, System.currentTimeMillis());
+            ps.setLong(3, idsCurrentPage[0]);
+            ps.setLong(4, idsCurrentPage[1]);
+            System.out.printf("Insertada página %d; maxId = %d, minId = %d.%n",
+                    page, idsCurrentPage[0], idsCurrentPage[1]);
+
+        } catch (SQLException ex) {
+            System.out.println("Error al insertar página: " + ex);
         }
     }
 
