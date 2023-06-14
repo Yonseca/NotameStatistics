@@ -24,44 +24,58 @@ public class FetchNotas {
     public static void main(String[] args) {
         try {
             int page = 1;
-            while(page <= MAX_PAGES) {
+            while (page <= MAX_PAGES) {
                 page = getNotas(page);
             }
-        } catch (URISyntaxException | IOException | InterruptedException e) {
+        } catch (URISyntaxException | InterruptedException e) {
             System.out.println("Boom: " + e);
         }
 
     }
 
-    private static int getNotas(int page) throws URISyntaxException, IOException, InterruptedException {
-        List<Nota> notasList = new ArrayList<>();
-        long[] ids = dao.getMaxMinIdOnDatabase();
-        List<Nota> listaNotas;
-        while (notasList.size() < 2500) {
-            listaNotas = getListaNotas(page);
-            notasList.addAll(listaNotas);
-            System.out.println("Notas para insertar: " + notasList.size());
-            page++;
-        }
-        int notasInsertadas = dao.insert(notasList);
-        System.out.println("Notas insertadas: " + notasInsertadas);
-        if (notasInsertadas == 0){
-            return page + getNextPage(ids);
-        } else {
+    private static int getNotas(int page) throws URISyntaxException, InterruptedException {
+        try {
+            List<Nota> notasList = new ArrayList<>();
+
+            long[] ids = dao.getMaxMinIdOnDatabase();
+            List<Nota> listaNotas;
+            while (notasList.size() < 1000) {
+                listaNotas = getListaNotas(page, ids);
+                notasList.addAll(listaNotas);
+                System.out.println("Notas para insertar: " + notasList.size());
+                page++;
+            }
+            return insertAndGetNextPage(page, notasList, ids);
+        } catch (IOException | NullPointerException io) {
+            System.out.println(io.getMessage());
+            System.out.println("Boom: reintentando página " + page);
             return page;
         }
 
 
     }
 
-    private static List<Nota> getListaNotas(int page) throws URISyntaxException, IOException, InterruptedException {
-        System.out.printf("Página %d de %d (%.2f %%)\n", page, MAX_PAGES, (double)page*100/MAX_PAGES);
+    private static int insertAndGetNextPage(int page, List<Nota> notasList, long[] ids) {
+        int notasInsertadas = dao.insertNotas(notasList);
+        System.out.println("Notas insertadas: " + notasInsertadas);
+        //if (notasInsertadas == 0) {
+            //return page + getNextPage(ids);
+        //} else {
+            return page;
+        //}
+    }
+
+    private static List<Nota> getListaNotas(int page, long[] ids) throws URISyntaxException, IOException, InterruptedException {
+        System.out.printf("Página %d de %d (%.2f %%)\n", page, MAX_PAGES, (double) page * 100 / MAX_PAGES);
         long tic = System.currentTimeMillis();
         HttpResponse<InputStream> response = requestNotasFromPage(page);
         List<Nota> listaNotas = parseNotas(response);
         long tac = System.currentTimeMillis();
         long delay = Math.round((tac - tic) * 1.25);
         System.out.printf("Esperando %s ms. ", delay);
+        long maxIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).max().orElse(-1L);
+        long minIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).min().orElse(-1L);
+        dao.insertPagina(page, new long[]{maxIdCurrentPage, minIdCurrentPage});
         Thread.sleep(delay);
         return listaNotas;
     }
@@ -82,6 +96,7 @@ public class FetchNotas {
         if (!recalculated) {
             long jump = (ids[0] - ids[1]) / NOTAS_PER_PAGE;
             recalculated = true;
+            System.out.printf("IdMax: %d, IdMin: %d, IdMax-IdMin = %d. ", ids[0], ids[1], ids[0] - ids[1]);
             System.out.printf("Saltando %d páginas\n", jump);
             return (int) jump;
         } else {
