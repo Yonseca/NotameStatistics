@@ -29,6 +29,7 @@ public class NotasDAO {
             var resultCount = ps.executeBatch();
             long insertedCount = Arrays.stream(resultCount).filter(result -> result == 1).count();
             long ignoredCount = Arrays.stream(resultCount).filter(result -> result == 0).count();
+
             logger.log(Level.INFO, "{} notas insertadas y {} notas ignoradas por existir en base de datos", new Long[]{insertedCount, ignoredCount});
             logger.exiting(getClass().getName(), getClass().getEnclosingMethod().getName());
 
