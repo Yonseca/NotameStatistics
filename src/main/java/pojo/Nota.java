@@ -1,15 +1,13 @@
-import com.opencsv.bean.CsvBindAndSplitByName;
-import com.opencsv.bean.CsvBindByName;
+package pojo;
+
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.time.Instant;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Nota implements Comparable<Nota>{
+public class Nota {
 
     public Nota(){}
 
@@ -18,7 +16,7 @@ public class Nota implements Comparable<Nota>{
         getNotaTextData(e);
     }
 
-    public Nota(Instant timestamp, int postId, String user, ArrayList<String> referencedUsers, String text, String html) {
+    public Nota(int timestamp, int postId, String user, ArrayList<String> referencedUsers, String text, String html) {
         this.timestamp = timestamp;
         this.postId = postId;
         this.user = user;
@@ -27,12 +25,9 @@ public class Nota implements Comparable<Nota>{
         this.html = html;
     }
 
+    @Deprecated
     public Nota(String[] csvLine) {
-        try{
-            this.timestamp = Instant.parse(csvLine[4]);
-        } catch (DateTimeParseException f){
-            System.out.println("Error parseando fecha: " + csvLine[4]);
-        }
+        this.timestamp = Integer.parseInt(csvLine[4]);
         this.postId = Integer.parseInt(csvLine[1]);
         this.user = csvLine[5];
         this.referencedUsers = Arrays.stream(csvLine[2].split(" ")).toList();
@@ -40,17 +35,11 @@ public class Nota implements Comparable<Nota>{
         this.html = csvLine[0];
     }
 
-    @CsvBindByName(column = "TIMESTAMP")
-    private Instant timestamp;
-    @CsvBindByName(column = "POSTID")
-    private int postId;
-    @CsvBindByName(column = "USER")
+    private long timestamp;
+    private long postId;
     private String user;
-    @CsvBindAndSplitByName(column = "REFERENCEDUSERS", elementType = String.class, collectionType = ArrayList.class)
     private List<String> referencedUsers;
-    @CsvBindByName(column = "TEXT")
     private String text;
-    @CsvBindByName(column = "HTML")
     private String html;
 
     public String getHtml() {
@@ -61,11 +50,11 @@ public class Nota implements Comparable<Nota>{
         this.html = html;
     }
 
-    public Instant getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Instant timestamp) {
+    public void setTimestamp(int timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -101,10 +90,6 @@ public class Nota implements Comparable<Nota>{
         this.text = text;
     }
 
-    @Override
-    public int compareTo(Nota o) {
-        return o.postId - this.postId;
-    }
 
     private void getNotaHeaderData(Element notaElement) {
         Elements header = notaElement.getElementsByClass("comment-header");
@@ -115,8 +100,7 @@ public class Nota implements Comparable<Nota>{
                     this.user = t.text();
                 }
                 if (t.hasAttr("data-ts")) {
-                    long ts = Long.parseLong(t.attr("data-ts"));
-                    this.timestamp = Instant.ofEpochSecond(ts);
+                    this.timestamp = Integer.parseInt(t.attr("data-ts"));
                 }
             }
         }
