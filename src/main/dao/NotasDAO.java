@@ -19,7 +19,7 @@ public class NotasDAO {
             "\tVALUES (?,?,?,?);";
 
     public int insertNotas(List<Nota> notas) {
-        logger.entering(getClass().getName(), getClass().getEnclosingMethod().getName());
+        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
         try (Connection connection = DriverManager.getConnection(CON_STRING);
              PreparedStatement ps = connection.prepareStatement(INSERT_NOTA)) {
             for (Nota nota : notas) {
@@ -30,7 +30,7 @@ public class NotasDAO {
             long insertedCount = Arrays.stream(resultCount).filter(result -> result == 1).count();
             long ignoredCount = Arrays.stream(resultCount).filter(result -> result == 0).count();
 
-            logger.log(Level.INFO, "{} notas insertadas y {} notas ignoradas por existir en base de datos", new Long[]{insertedCount, ignoredCount});
+            logger.log(Level.INFO, () -> insertedCount + " notas insertadas y "  + ignoredCount + " notas ignoradas por existir en base de datos");
             logger.exiting(getClass().getName(), getClass().getEnclosingMethod().getName());
 
             return (int) insertedCount;
@@ -43,7 +43,7 @@ public class NotasDAO {
     }
 
     private void addInsertToPreparedStatement(PreparedStatement ps, Nota nota) {
-        logger.entering(getClass().getName(), getClass().getEnclosingMethod().getName());
+        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         try {
             ps.setLong(1, nota.getPostId());
@@ -61,7 +61,7 @@ public class NotasDAO {
     }
 
     public long insertPagina(int page, long[] idsCurrentPage) {
-        logger.entering(getClass().getName(), getClass().getEnclosingMethod().getName());
+        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         try (Connection connection = DriverManager.getConnection(CON_STRING);
              PreparedStatement ps = connection.prepareStatement(INSERT_PAGE)) {
@@ -77,14 +77,17 @@ public class NotasDAO {
     }
 
     private void setInsertPageParameters(int page, long[] idsCurrentPage, PreparedStatement ps) {
-        logger.entering(getClass().getName(), getClass().getEnclosingMethod().getName());
+        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         try {
             ps.setLong(1, page);
             ps.setLong(2, System.currentTimeMillis());
             ps.setLong(3, idsCurrentPage[0]);
             ps.setLong(4, idsCurrentPage[1]);
-            logger.log(Level.INFO, "Insertada página {}; maxId = {}, minId = {}.",  new long[] {page, idsCurrentPage[0], idsCurrentPage[1]});
+            logger.log(Level.INFO, () -> "Insertada página " 
+                    + page + "; maxId = " 
+                    + idsCurrentPage[0] + ", minId = "
+                    + idsCurrentPage[1] +  ".");
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error al insertar página", e);
@@ -94,7 +97,7 @@ public class NotasDAO {
     }
 
     public long[] getMaxMinIdOnDatabase() {
-        logger.entering(getClass().getName(), getClass().getEnclosingMethod().getName());
+        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         long[] ids = new long[2];
         try (Connection connection = DriverManager.getConnection(CON_STRING)) {
