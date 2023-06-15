@@ -31,7 +31,7 @@ public class FetchNotas {
         logger.entering(FetchNotas.class.getName(), "Main");
 
         try {
-            int page = 1;
+            int page = 2158;
             while (page <= MAX_PAGES) {
                 page = getNotas(page);
             }
@@ -99,7 +99,7 @@ public class FetchNotas {
         List<Nota> listaNotas = parseNotas(response);
         long tac = System.currentTimeMillis();
         long delay = Math.round((tac - tic) * 1.25);
-        logger.log(Level.INFO, "Esperando {} ms. ", delay);
+        logger.log(Level.INFO, "Esperando {0} ms. ", delay);
         long maxIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).max().orElse(-1L);
         long minIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).min().orElse(-1L);
         dao.insertPagina(page, new long[]{maxIdCurrentPage, minIdCurrentPage});

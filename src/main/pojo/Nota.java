@@ -16,7 +16,7 @@ public class Nota {
         getNotaTextData(e);
     }
 
-    public Nota(int timestamp, int postId, String user, ArrayList<String> referencedUsers, String text, String html) {
+    public Nota(int timestamp, long postId, String user, ArrayList<String> referencedUsers, String text, String html) {
         this.timestamp = timestamp;
         this.postId = postId;
         this.user = user;
@@ -62,7 +62,7 @@ public class Nota {
         return postId;
     }
 
-    public void setPostId(int postId) {
+    public void setPostId(long postId) {
         this.postId = postId;
     }
 
