@@ -1,4 +1,5 @@
 NotasDb.db
+src/main/dao/DbConstants.java
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

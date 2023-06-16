@@ -1,19 +1,16 @@
 package dao;
 import pojo.Nota;
 
-import java.lang.reflect.AnnotatedType;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 public class NotasDAO {
     Logger logger = Logger.getLogger(NotasDAO.class.getName());
     public static final String ERROR_INSERT_NOTAS = "Error al insertar notas";
 
-    public static final String CON_STRING = "jdbc:sqlite:NotasDb.db";
     public static final String INSERT_NOTA = "INSERT OR IGNORE INTO Notas (post_id,\"user\",\"timestamp\",referenced_users,html,\"text\") " +
             "VALUES (?,?,?,?,?,?); ";
 
@@ -27,7 +24,7 @@ public class NotasDAO {
         List<Long> nullIds = new ArrayList<>(LongStream.rangeClosed(minId, maxId).boxed().toList());
         //nullIds.removeIf(nullId -> notas.stream().mapToLong(Nota::getPostId).anyMatch(id -> id == nullId));
 
-        try (Connection connection = DriverManager.getConnection(CON_STRING);
+        try (Connection connection = DriverManager.getConnection(DbConstants.CON_STRING, DbConstants.CON_USER, DbConstants.CON_PASS);
              PreparedStatement ps = connection.prepareStatement(INSERT_NOTA)) {
             for (Nota nota : notas) {
                 addInsertToPreparedStatement(ps, nota);
@@ -94,10 +91,10 @@ public class NotasDAO {
 
     }
 
-    public long insertPagina(int page, long[] idsCurrentPage) {
+/*    public long insertPagina(int page, long[] idsCurrentPage) {
         logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
-        try (Connection connection = DriverManager.getConnection(CON_STRING);
+        try (Connection connection = DriverManager.getConnection(Constants.CON_STRING);
              PreparedStatement ps = connection.prepareStatement(INSERT_PAGE)) {
             setInsertPageParameters(page, idsCurrentPage, ps);
             logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -108,7 +105,7 @@ public class NotasDAO {
             logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
             return -1;
         }
-    }
+    }*/
 
     private void setInsertPageParameters(int page, long[] idsCurrentPage, PreparedStatement ps) {
         logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -134,9 +131,10 @@ public class NotasDAO {
         logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         long[] ids = new long[2];
-        try (Connection connection = DriverManager.getConnection(CON_STRING)) {
+        try (Connection connection = DriverManager.getConnection(DbConstants.CON_STRING, DbConstants.CON_USER, DbConstants.CON_PASS);) {
             try (Statement st = connection.createStatement()) {
                 ResultSet rs = st.executeQuery("SELECT MAX(post_id), MIN(post_id) FROM Notas");
+                rs.next();
                 ids[0] = rs.getLong(1); // Nota más reciente almacenada
                 ids[1] = rs.getLong(2); // Nota más antigua almacenada
             }

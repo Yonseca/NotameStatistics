@@ -102,7 +102,7 @@ public class FetchNotas {
         logger.log(Level.INFO, "Esperando {0} ms. ", delay);
         long maxIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).max().orElse(-1L);
         long minIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).min().orElse(-1L);
-        dao.insertPagina(page, new long[]{maxIdCurrentPage, minIdCurrentPage});
+        //dao.insertPagina(page, new long[]{maxIdCurrentPage, minIdCurrentPage});
         Thread.sleep(delay);
         logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
