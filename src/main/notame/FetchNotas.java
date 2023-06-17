@@ -31,7 +31,7 @@ public class FetchNotas {
         logger.entering(FetchNotas.class.getName(), "Main");
 
         try {
-            int page = 2158;
+            int page = 10219;
             while (page <= MAX_PAGES) {
                 page = getNotas(page);
             }
@@ -55,7 +55,7 @@ public class FetchNotas {
 
             long[] ids = dao.getMaxMinIdOnDatabase();
             List<Nota> listaNotas;
-            while (notasList.size() < 1000) {
+            while (notasList.size() < 10000) {
                 listaNotas = getListaNotas(page, ids);
                 notasList.addAll(listaNotas);
                 logger.log(Level.INFO, "Notas para insertar: {0}", notasList.size());
@@ -80,14 +80,9 @@ public class FetchNotas {
 
         int notasInsertadas = dao.insertNotas(notasList);
         logger.log(Level.INFO, () -> "Notas insertadas: " + notasInsertadas);
-
-        //if (notasInsertadas == 0) {
-            //return page + getNextPage(ids);
-        //} else {
         logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         return page;
-        //}
     }
 
     private static List<Nota> getListaNotas(int page, long[] ids) throws URISyntaxException, IOException, InterruptedException {
@@ -100,9 +95,6 @@ public class FetchNotas {
         long tac = System.currentTimeMillis();
         long delay = Math.round((tac - tic) * 1.25);
         logger.log(Level.INFO, "Esperando {0} ms. ", delay);
-        long maxIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).max().orElse(-1L);
-        long minIdCurrentPage = listaNotas.stream().mapToLong(Nota::getPostId).min().orElse(-1L);
-        //dao.insertPagina(page, new long[]{maxIdCurrentPage, minIdCurrentPage});
         Thread.sleep(delay);
         logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 

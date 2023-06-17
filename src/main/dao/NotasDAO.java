@@ -46,9 +46,9 @@ public class NotasDAO {
             long deletedCount = nullIds.size();
 
             logger.log(Level.INFO, () ->
-                    insertedCount + " notas nuevas, "
-                    + ignoredCount + " notas ignoradas y "
-                    + deletedCount + " notas no recuperables.");
+                    insertedCount + " notas nuevas y "
+                    + ignoredCount + " notas ignoradas, de las cuales "
+                    + deletedCount + " notas ya no existen.");
             logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
             return (int) insertedCount;
