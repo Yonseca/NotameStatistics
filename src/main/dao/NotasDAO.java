@@ -11,11 +11,14 @@ public class NotasDAO {
     Logger logger = Logger.getLogger(NotasDAO.class.getName());
     public static final String ERROR_INSERT_NOTAS = "Error al insertar notas";
 
-    public static final String INSERT_NOTA = "INSERT OR IGNORE INTO Notas (post_id,\"user\",\"timestamp\",referenced_users,html,\"text\") " +
-            "VALUES (?,?,?,?,?,?); ";
+    public static final String INSERT_NOTA = """
+        INSERT INTO public.notas (post_id,"user","timestamp",referenced_users,html,"text")
+         VALUES (?,?,?,?,?,?)
+         ON CONFLICT (post_id) DO NOTHING;
+        """;
 
-    public static final String INSERT_PAGE = "INSERT OR REPLACE INTO search_data (page,\"timestamp\",maxId,minId)\n" +
-            "\tVALUES (?,?,?,?);";
+    //public static final String INSERT_PAGE = "INSERT OR REPLACE INTO search_data (page,\"timestamp\",maxId,minId)\n" +
+    //        "\tVALUES (?,?,?,?);";
 
     public int insertNotas(List<Nota> notas) {
         logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
