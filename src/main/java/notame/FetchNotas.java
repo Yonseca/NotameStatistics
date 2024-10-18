@@ -27,25 +27,25 @@ public class FetchNotas {
     private static boolean recalculated = false;
     private static final NotasDAO dao = new NotasDAO();
 
-    public static void main(String[] args) throws URISyntaxException, InterruptedException {
-        logger.entering(FetchNotas.class.getName(), "Main");
-
-        try {
-            int page = 10219;
-            while (page <= MAX_PAGES) {
-                page = getNotas(page);
-            }
-        } catch (URISyntaxException e) {
-            logger.log(Level.SEVERE, "Boom: ", e);
-            throw e;
-        } catch (InterruptedException interruptedException){
-            logger.log(Level.SEVERE, "Hilo interrumpido: ", interruptedException);
-            throw interruptedException;
-        }
-
-        logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-
-    }
+//    public static void main(String[] args) throws URISyntaxException, InterruptedException {
+//        logger.entering(FetchNotas.class.getName(), "Main");
+//
+//        try {
+//            int page = 10219;
+//            while (page <= MAX_PAGES) {
+//                page = getNotas(page);
+//            }
+//        } catch (URISyntaxException e) {
+//            logger.log(Level.SEVERE, "Boom: ", e);
+//            throw e;
+//        } catch (InterruptedException interruptedException){
+//            logger.log(Level.SEVERE, "Hilo interrumpido: ", interruptedException);
+//            throw interruptedException;
+//        }
+//
+//        logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+//
+//    }
 
     private static int getNotas(int page) throws URISyntaxException, InterruptedException {
         logger.entering(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());

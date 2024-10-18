@@ -118,4 +118,8 @@ public class Nota {
         }
 
     }
+
+    private void getNotaByID(long id){
+
+    }
 }

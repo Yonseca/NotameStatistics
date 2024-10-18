@@ -1,4 +1,5 @@
 package dao;
+import constants.DbConstants;
 import pojo.Nota;
 
 import java.sql.*;
@@ -134,12 +135,30 @@ public class NotasDAO {
         logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         long[] ids = new long[2];
-        try (Connection connection = DriverManager.getConnection(DbConstants.CON_STRING, DbConstants.CON_USER, DbConstants.CON_PASS);) {
+        try (Connection connection = DriverManager.getConnection(DbConstants.CON_STRING, DbConstants.CON_USER, DbConstants.CON_PASS)) {
             try (Statement st = connection.createStatement()) {
                 ResultSet rs = st.executeQuery("SELECT MAX(post_id), MIN(post_id) FROM Notas");
                 rs.next();
                 ids[0] = rs.getLong(1); // Nota más reciente almacenada
                 ids[1] = rs.getLong(2); // Nota más antigua almacenada
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error al recuperar ids", e);
+        }
+        logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+
+        return ids;
+    }
+
+    public Set<Long> getAllIds() {
+        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+        Set<Long> ids = new LinkedHashSet<>();
+        try (Connection connection = DriverManager.getConnection(DbConstants.CON_STRING, DbConstants.CON_USER, DbConstants.CON_PASS)) {
+            try (Statement st = connection.createStatement()) {
+                ResultSet rs = st.executeQuery("SELECT post_id FROM Notas");
+                while(rs.next()){
+                    ids.add(rs.getLong(1));
+                }
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error al recuperar ids", e);
