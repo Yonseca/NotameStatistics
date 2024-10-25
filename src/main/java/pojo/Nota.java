@@ -119,9 +119,6 @@ public class Nota {
 
     }
 
-    private void getNotaByID(long id){
-
-    }
 
     @Override
     public String toString() {

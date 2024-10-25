@@ -104,15 +104,15 @@ public class FetchNotas {
         logger.entering(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         URI uri = new URI(URL + page);
-        HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+        try(HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()){
+            HttpRequest request = HttpRequest.newBuilder(uri)
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+                    .header("Accept-Encoding", "gzip,deflate,br")
+                    .build();
+            logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
-        HttpRequest request = HttpRequest.newBuilder(uri)
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-                .header("Accept-Encoding", "gzip,deflate,br")
-                .build();
-        logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-
-        return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        }
     }
 
     private static int getNextPage(long[] ids) {

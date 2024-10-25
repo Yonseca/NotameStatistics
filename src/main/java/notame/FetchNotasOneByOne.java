@@ -22,11 +22,6 @@ public class FetchNotasOneByOne {
     private static final Logger logger = Logger.getLogger(FetchNotasOneByOne.class.getName());
 
     public static final String URL = "https://old.meneame.net//notame/";
-    private static final NotasDAO dao = new NotasDAO();
-    private Nota nota;
-
-    public void FetchNota() {
-    }
 
     public Nota FetchNota(long id) throws URISyntaxException, InterruptedException {
         logger.entering(FetchNotasOneByOne.class.getName(), "Main");
@@ -99,8 +94,7 @@ public class FetchNotasOneByOne {
         logger.entering(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
         URI uri = new URI(URL + id);
-        try {
-            HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+        try (HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()){
             HttpRequest request = HttpRequest.newBuilder(uri)
                     .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
                     .header("Accept-Encoding", "gzip,deflate,br")
@@ -155,7 +149,6 @@ public class FetchNotasOneByOne {
 
     private static Nota parseNota(HttpResponse<InputStream> response, long id) {
         logger.entering(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-        Nota nota = new Nota();
         try (GZIPInputStream g = new GZIPInputStream(response.body())) {
             String string = new String(g.readAllBytes());
             Document doc = Jsoup.parse(string);
