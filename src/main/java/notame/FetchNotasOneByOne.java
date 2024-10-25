@@ -30,7 +30,6 @@ public class FetchNotasOneByOne {
 
     public Nota FetchNota(long id) throws URISyntaxException, InterruptedException {
         logger.entering(FetchNotasOneByOne.class.getName(), "Main");
-        id = 1;
         try {
             logger.exiting(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
             return requestNota(id);
@@ -110,12 +109,24 @@ public class FetchNotasOneByOne {
             logger.exiting(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
 
             HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
-            List<Nota> listaNotasResponse = parseNotas(response);
-            assert listaNotasResponse != null;
-            for (Nota n : listaNotasResponse) {
-                if (n.getPostId() == id) return n;
-                else return null;
+            switch (response.statusCode()){
+                case 200 -> {
+                    List<Nota> listaNotasResponse = parseNotas(response);
+                    assert listaNotasResponse != null;
+                    for (Nota n : listaNotasResponse) {
+                        if (n.getPostId() == id){
+                            return n;
+                        } else {
+                            return null;
+                        }
+                    }
+                }
+
+                case 404 -> {
+                    return null;
+                }
             }
+
         } catch (Exception e) {
             logger.exiting(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
             throw new RuntimeException(e);
@@ -142,23 +153,26 @@ public class FetchNotasOneByOne {
         }
     }
 
-//    private static Nota parseNota(HttpResponse<InputStream> response, long id) {
-//        logger.entering(FetchNota.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-//
-//        try (GZIPInputStream g = new GZIPInputStream(response.body())) {
-//            String string = new String(g.readAllBytes());
-//            Document doc = Jsoup.parse(string);
-//            var elements = doc.getElementsByAttributeValueStarting("data-id", "post-" + id);
-//            logger.exiting(FetchNota.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-//
-//            return elements.stream().
-//
-//            )
-//        } catch (IOException io) {
-//            logger.severe(() -> "Boom: " + io);
-//            logger.exiting(FetchNota.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-//
-//            return null;
-//        }
-//    }
+    private static Nota parseNota(HttpResponse<InputStream> response, long id) {
+        logger.entering(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+        Nota nota = new Nota();
+        try (GZIPInputStream g = new GZIPInputStream(response.body())) {
+            String string = new String(g.readAllBytes());
+            Document doc = Jsoup.parse(string);
+            var elements = doc.getElementsByAttributeValueStarting("data-id", "post-" + id);
+            logger.exiting(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+            if (elements.get(0) != null){
+                return new Nota(elements.get(0));
+            } else {
+                return null;
+            }
+
+
+        } catch (IOException io) {
+            logger.severe(() -> "Boom: " + io);
+            logger.exiting(FetchNotasOneByOne.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+
+            return null;
+        }
+    }
 }

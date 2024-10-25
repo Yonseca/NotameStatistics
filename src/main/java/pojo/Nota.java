@@ -93,7 +93,7 @@ public class Nota {
 
     private void getNotaHeaderData(Element notaElement) {
         Elements header = notaElement.getElementsByClass("comment-header");
-        if (header.size() > 0) {
+        if (!header.isEmpty()) {
             Elements headerContent = header.get(0).getAllElements();
             for (var t : headerContent) {
                 if (t.hasClass("username")) {
@@ -108,7 +108,7 @@ public class Nota {
 
     private void getNotaTextData(Element notaElement) {
         Elements body = notaElement.getElementsByClass("comment-text");
-        if (body.size() > 0) {
+        if (!body.isEmpty()) {
             Element text = body.get(0);
             this.text = text.wholeText();
             this.html = text.html();
@@ -121,5 +121,10 @@ public class Nota {
 
     private void getNotaByID(long id){
 
+    }
+
+    @Override
+    public String toString() {
+        return "(User: " + this.user + ")";
     }
 }

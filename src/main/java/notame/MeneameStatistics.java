@@ -25,7 +25,7 @@ public class MeneameStatistics {
         long[] minMax = notasDAO.getMaxMinIdOnDatabase();
         Set<Long> ids = notasDAO.getAllIds();
 
-        Set<Long> missingNotas = LongStream.rangeClosed(1,minMax[0]).boxed().collect(Collectors.toSet());
+        Set<Long> missingNotas = LongStream.rangeClosed(1,3654984).boxed().collect(Collectors.toSet());
         System.out.println("Ids en bbdd: " + ids.size());
         System.out.println("Ids en total: " + missingNotas.size());
         missingNotas.removeAll(ids);
@@ -33,8 +33,17 @@ public class MeneameStatistics {
         System.out.println(missingNotas);
 
         try {
-            Nota nota = fetchNotasOneByOne.FetchNota(1);
-            System.out.println(nota.getPostId());
+            long restantes = missingNotas.size();
+            for (Long missingNota : missingNotas){
+                Nota nota = fetchNotasOneByOne.FetchNota(missingNota);
+                if (nota == null){
+                    nota = new Nota();
+                    nota.setPostId(missingNota);
+                }
+                notasDAO.insertSingleNota(nota);
+                restantes--;
+                logger.info("Quedan " + restantes + " notas");
+            }
         } catch (URISyntaxException e) {
             logger.log(Level.SEVERE, "Boom: ", e);
             throw e;

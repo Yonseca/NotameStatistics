@@ -68,7 +68,6 @@ public class FetchNotas {
             logger.log(Level.SEVERE, "Boom: reintentando página {0}", page);
             logger.log(Level.SEVERE, "Boom:", io);
             logger.exiting(FetchNotas.class.getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-
             return page;
         }
 

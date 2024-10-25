@@ -21,7 +21,34 @@ public class NotasDAO {
     //public static final String INSERT_PAGE = "INSERT OR REPLACE INTO search_data (page,\"timestamp\",maxId,minId)\n" +
     //        "\tVALUES (?,?,?,?);";
 
-    public int insertNotas(List<Nota> notas) {
+    public long insertSingleNota(Nota nota) {
+        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+        try (Connection connection = DriverManager.getConnection(DbConstants.CON_STRING, DbConstants.CON_USER, DbConstants.CON_PASS);
+            PreparedStatement ps = connection.prepareStatement(INSERT_NOTA)) {
+            addInsertToPreparedStatement(ps, nota);
+
+            logger.info("Insertando nota " + nota.getPostId() + " del usuario " + nota.getUser());
+            var resultCount = ps.executeBatch();
+            long insertedCount = Arrays.stream(resultCount).filter(result -> result == 1).count();
+            long ignoredCount = Arrays.stream(resultCount).filter(result -> result == 0).count();
+
+            if (insertedCount > 0) {
+                logger.log(Level.INFO, () -> "Nota " + nota.getPostId() + " insertada");
+            } else {
+                logger.log(Level.INFO, () -> "Nota " + nota.getPostId() + " ignorada");
+            }
+            logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+
+            return insertedCount;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, ERROR_INSERT_NOTAS, e);
+            logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+            return -1;
+        }
+    }
+
+
+        public int insertNotas(List<Nota> notas) {
         logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
         long minId = notas.stream().min(Comparator.comparing(Nota::getPostId)).orElseThrow().getPostId();
         long maxId = notas.stream().max(Comparator.comparing(Nota::getPostId)).orElseThrow().getPostId();
@@ -111,25 +138,25 @@ public class NotasDAO {
         }
     }*/
 
-    private void setInsertPageParameters(int page, long[] idsCurrentPage, PreparedStatement ps) {
-        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-
-        try {
-            ps.setLong(1, page);
-            ps.setLong(2, System.currentTimeMillis());
-            ps.setLong(3, idsCurrentPage[0]);
-            ps.setLong(4, idsCurrentPage[1]);
-            logger.log(Level.INFO, () -> "Insertada página " 
-                    + page + "; maxId = " 
-                    + idsCurrentPage[0] + ", minId = "
-                    + idsCurrentPage[1] +  ".");
-
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error al insertar página", e);
-        }
-        logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
-
-    }
+//    private void setInsertPageParameters(int page, long[] idsCurrentPage, PreparedStatement ps) {
+//        logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+//
+//        try {
+//            ps.setLong(1, page);
+//            ps.setLong(2, System.currentTimeMillis());
+//            ps.setLong(3, idsCurrentPage[0]);
+//            ps.setLong(4, idsCurrentPage[1]);
+//            logger.log(Level.INFO, () -> "Insertada página "
+//                    + page + "; maxId = "
+//                    + idsCurrentPage[0] + ", minId = "
+//                    + idsCurrentPage[1] +  ".");
+//
+//        } catch (SQLException e) {
+//            logger.log(Level.SEVERE, "Error al insertar página", e);
+//        }
+//        logger.exiting(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
+//
+//    }
 
     public long[] getMaxMinIdOnDatabase() {
         logger.entering(getClass().getName(), Thread.currentThread().getStackTrace()[1].getMethodName());
